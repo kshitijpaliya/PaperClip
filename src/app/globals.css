@@ -1,26 +1,260 @@
 @import "tailwindcss";
+@import "@uploadthing/react/styles.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --radius: 0.75rem;
+
+    /* Brand colors for dark theme */
+    --brand-primary: 217 91% 60%;
+    --brand-secondary: 263 87% 71%;
+    --brand-accent: 142 76% 36%;
+    --success: 142 76% 36%;
+    --warning: 43 96% 56%;
+    --info: 217 91% 60%;
+    --error: 0 84.2% 60.2%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.7);
+  }
+
+  /* Enhanced focus styles */
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+  }
+
+  /* Typography improvements */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+
+  /* Custom animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes glow {
+    0%,
+    100% {
+      box-shadow: 0 0 20px hsl(var(--brand-primary) / 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px hsl(var(--brand-primary) / 0.2);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  /* Custom utility classes */
+  .brand-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-primary)),
+      hsl(var(--brand-secondary))
+    );
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-primary)),
+      hsl(var(--brand-secondary))
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-effect {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px hsl(var(--foreground) / 0.1);
+  }
+
+  /* Enhanced button styles */
+  .btn-primary {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-primary)),
+      hsl(var(--brand-secondary))
+    );
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px hsl(var(--brand-primary) / 0.3);
+  }
+
+  /* Loading animations */
+  .loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Text editor improvements */
+  .editor-area {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+  }
+
+  .editor-area:focus-within {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  }
+
+  /* File upload area */
+  .upload-area {
+    border: 2px dashed hsl(var(--border));
+    transition: all 0.2s ease;
+  }
+
+  .upload-area:hover {
+    border-color: hsl(var(--brand-primary));
+    background: hsl(var(--brand-primary) / 0.05);
+  }
+
+  /* Status indicators */
+  .status-saving {
+    background: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.2);
+  }
+
+  .status-saved {
+    background: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.2);
+  }
+
+  .status-error {
+    background: hsl(var(--error) / 0.1);
+    color: hsl(var(--error));
+    border: 1px solid hsl(var(--error) / 0.2);
+  }
+}
+
+.ut-button {
+  @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.ut-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.ut-allowed-content {
+  @apply text-gray-400 text-sm;
+}
+
+.ut-uploading {
+  @apply text-blue-500;
+}
+
+.ut-clear-btn {
+  @apply absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1 rounded transition-colors duration-200 shadow focus:outline-none focus:ring-2 focus:ring-red-400;
 }
