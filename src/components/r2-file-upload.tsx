@@ -78,7 +78,7 @@ export function R2FileUpload({
       const fileNames = (result.files as UploadedFile[])
         .map((file) => file.name)
         .join(", ");
-      toast.success(`Successfully uploaded: ${fileNames}`);
+      toast.success(`Successfully Uploaded: ${fileNames}`);
       setSelectedFiles([]);
       onUploadComplete?.();
 
