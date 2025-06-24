@@ -74,7 +74,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-teal-500/5">
-      <div className="container mx-auto px-20 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-8 md:px-12 lg:px-20 py-8 max-w-4xl">
         {/* Header Section */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
@@ -88,18 +88,6 @@ export function NoteEditor({ path }: NoteEditorProps) {
             </Button>
 
             <div className="flex items-center gap-3 ">
-              {saving && (
-                <Badge className="status-saving animate-pulse">
-                  <Save className="w-3 h-3 mr-1" />
-                  Saving...
-                </Badge>
-              )}
-              {lastSaved && !saving && (
-                <Badge className="status-saved">
-                  <Check className="w-3 h-3 mr-1" />
-                  Saved {lastSaved.toLocaleTimeString()}
-                </Badge>
-              )}
               <Button
                 variant="outline"
                 onClick={copyUrl}
@@ -115,8 +103,22 @@ export function NoteEditor({ path }: NoteEditorProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 justify-between">
             <h1 className="text-2xl font-bold text-gradient">/{path}</h1>
+            <div>
+              {saving && (
+                <Badge className="status-saving animate-pulse">
+                  <Save className="w-3 h-3 mr-1" />
+                  Saving...
+                </Badge>
+              )}
+              {lastSaved && !saving && (
+                <Badge className="status-saved">
+                  <Check className="w-3 h-3 mr-1" />
+                  Saved {lastSaved.toLocaleTimeString()}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
@@ -174,22 +176,22 @@ export function NoteEditor({ path }: NoteEditorProps) {
           {/* Stats Section */}
           <Card className="glass-effect border-border/50">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-4">
-                  <span>{content.length} characters</span>
+                  <span>{content.length} Characters</span>
                   <span>
                     {
                       content.split(/\s+/).filter((word) => word.length > 0)
                         .length
                     }{" "}
-                    words
+                    Words
                   </span>
-                  <span>{content.split("\n").length} lines</span>
+                  <span>{content.split("\n").length} Lines</span>
                 </div>
                 <div>
                   {lastSaved
-                    ? `Last saved: ${lastSaved.toLocaleString()}`
-                    : "Not saved yet"}
+                    ? `Saved: ${lastSaved.toLocaleString()}`
+                    : "Not Saved Yet"}
                 </div>
               </div>
             </CardContent>
