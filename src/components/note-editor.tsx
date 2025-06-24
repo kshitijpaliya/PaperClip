@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 // Remove FileUpload import and add UploadThing
-import { UploadThingUploader } from "./uploadthing-uploader";
+import { R2FileUpload } from "@/components/r2-file-upload";
 import { FileList } from "./file-list";
 import { useNote } from "@/hooks/use-note";
 import { Loader2, Save, Check, Copy, ArrowLeft } from "lucide-react";
@@ -74,7 +74,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-teal-500/5">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-20 py-8 max-w-4xl">
         {/* Header Section */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center justify-between mb-4">
@@ -152,7 +152,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <UploadThingUploader
+              <R2FileUpload
                 notePath={path}
                 onUploadComplete={refreshNote}
                 disabled={saving}

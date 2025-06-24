@@ -1,10 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { UTApi } from "uploadthing/server";
+import { deleteFromR2, generatePresignedUrl } from "@/lib/r2-client";
 
-const utapi = new UTApi();
-
-// GET: Download file by ID
+// GET: Download file by ID using presigned URL
 export async function GET(
   request: NextRequest,
   { params }: { params: { fileId: string } }
@@ -18,11 +16,19 @@ export async function GET(
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Redirect to UploadThing URL for download
-    return NextResponse.redirect(fileRecord.url);
+    // Check if file has expired
+    if (fileRecord.expiresAt && fileRecord.expiresAt < new Date()) {
+      return NextResponse.json({ error: "File has expired" }, { status: 410 });
+    }
+
+    // Generate presigned URL (expires in 1 hour)
+    const signedUrl = await generatePresignedUrl(fileRecord.filename, 3600);
+    
+    // Redirect to the presigned URL
+    return NextResponse.redirect(signedUrl);
   } catch (error) {
-    console.error("Error downloading file:", error);
-    return NextResponse.json({ error: "Failed to download file" }, { status: 500 });
+    console.error("Error generating download URL:", error);
+    return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
   }
 }
 
@@ -48,12 +54,12 @@ export async function DELETE(
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Delete from UploadThing first
+    // Delete from R2 first
     try {
-      await utapi.deleteFiles([fileRecord.filename]);
-    } catch (utError) {
-      console.warn("Failed to delete from UploadThing:", utError);
-      // Continue with database deletion even if UploadThing deletion fails
+      await deleteFromR2(fileRecord.filename);
+    } catch (r2Error) {
+      console.warn("Failed to delete from R2:", r2Error);
+      // Continue with database deletion even if R2 deletion fails
     }
 
     // Delete from database
@@ -61,14 +67,15 @@ export async function DELETE(
       where: { id: fileId },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "File deleted successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "File deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting file:", error);
-    return NextResponse.json({ 
-      error: "Failed to delete file" 
-    }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete file" },
+      { status: 500 }
+    );
   }
 }

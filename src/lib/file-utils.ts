@@ -1,6 +1,7 @@
 import { writeFile, mkdir, readFile } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
+import { v4 as uuidv4 } from 'uuid';
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads")
 
@@ -23,9 +24,18 @@ export async function readFileFromDisk(filename: string): Promise<Buffer> {
 }
 
 export function generateUniqueFilename(originalName: string): string {
-  const timestamp = Date.now()
-  const random = Math.random().toString(36).substring(2)
-  const extension = path.extname(originalName)
-  const nameWithoutExt = path.basename(originalName, extension)
-  return `${nameWithoutExt}-${timestamp}-${random}${extension}`
+  const ext = path.extname(originalName);
+  const nameWithoutExt = path.basename(originalName, ext);
+  const sanitizedName = nameWithoutExt.replace(/[^a-zA-Z0-9-_]/g, '_');
+  const uniqueId = uuidv4();
+  return `${sanitizedName}_${uniqueId}${ext}`;
+}
+
+export function getFileType(mimeType: string): string {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('video/')) return 'video';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  if (mimeType === 'application/pdf') return 'pdf';
+  if (mimeType.startsWith('text/')) return 'text';
+  return 'other';
 }
