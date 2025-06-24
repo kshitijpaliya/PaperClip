@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { R2FileUpload } from "@/components/r2-file-upload";
 import { FileList } from "./file-list";
 import { useNote } from "@/hooks/use-note";
-import { Loader2, Save, Check, Copy, ArrowLeft } from "lucide-react";
+import { Loader2, Save, Check, Copy, ArrowLeft, Paperclip } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -38,7 +38,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
             setLastSaved(new Date());
           })
           .catch(() => {
-            toast.error("Failed to save note");
+            toast.error("Failed To Save Note");
           });
       }
     }, 3000);
@@ -50,10 +50,10 @@ export function NoteEditor({ path }: NoteEditorProps) {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      toast.success("URL copied to clipboard!");
+      toast.success("URL Copied To Clipboard!");
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast.error("Failed to copy URL");
+    } catch {
+      toast.error("Failed To Copy URL");
     }
   };
 
@@ -81,13 +81,13 @@ export function NoteEditor({ path }: NoteEditorProps) {
             <Button
               variant="ghost"
               onClick={() => router.push("/")}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground border hover:border-blue-950 hover:bg-blue-850/10 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ">
               {saving && (
                 <Badge className="status-saving animate-pulse">
                   <Save className="w-3 h-3 mr-1" />
@@ -100,7 +100,11 @@ export function NoteEditor({ path }: NoteEditorProps) {
                   Saved {lastSaved.toLocaleTimeString()}
                 </Badge>
               )}
-              <Button variant="outline" size="sm" onClick={copyUrl}>
+              <Button
+                variant="outline"
+                onClick={copyUrl}
+                className="hover:border-blue-950 hover:bg-blue-850/10 transition-colors"
+              >
                 {copied ? (
                   <Check className="w-4 h-4 mr-2" />
                 ) : (
@@ -144,12 +148,15 @@ export function NoteEditor({ path }: NoteEditorProps) {
             </CardContent>
           </Card>
 
-          {/* Files Section - Replace FileUpload with UploadThing */}
-          <Card className="glass-effect border-border/50 card-hover border-[#2a2a5a] bg-[#12122a]">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-foreground flex items-center">
-                📎 File Attachments
-              </CardTitle>
+          {/* Files Section */}
+          <Card className=" glass-effect border border-blue-950 backdrop-blur-sm transition-all hover:shadow-lg">
+            <CardHeader className="pb-3">
+              <div className="flex items-center space-x-2">
+                <Paperclip className="h-4 w-4 text-blue-400" />
+                <CardTitle className="text-lg font-medium text-foreground">
+                  File Attachments -
+                </CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               <R2FileUpload

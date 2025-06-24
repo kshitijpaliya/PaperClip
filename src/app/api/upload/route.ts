@@ -43,11 +43,6 @@ const MAX_FILE_SIZES: { [key: string]: number } = {
   default: 5 * 1024 * 1024, // 5MB
 };
 
-console.log("Upload API Route - Environment check:");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("R2_ENDPOINT available:", !!process.env.R2_ENDPOINT);
-console.log("R2_BUCKET_NAME available:", !!process.env.R2_BUCKET_NAME);
-
 export async function POST(req: NextRequest) {
   console.log("=== UPLOAD REQUEST START ===");
 
@@ -104,7 +99,7 @@ export async function POST(req: NextRequest) {
     // Check file count limit per note
     if (note.files.length + files.length > 10) {
       return NextResponse.json(
-        { error: "Maximum 10 files allowed per note" },
+        { error: "Maximum 10 Files Allowed Per Note" },
         { status: 400 }
       );
     }
@@ -138,16 +133,16 @@ export async function POST(req: NextRequest) {
 
       // Generate unique filename
       const uniqueFilename = generateUniqueFilename(file.name);
-      console.log(`Generated unique filename: ${uniqueFilename}`);
+      // console.log(`Generated unique filename: ${uniqueFilename}`);
 
       // Convert file to buffer
       const buffer = Buffer.from(await file.arrayBuffer());
-      console.log(`Buffer created, size: ${buffer.length}`);
+      // console.log(`Buffer created, size: ${buffer.length}`);
 
       // Upload to R2 (returns key, not URL)
       console.log("Starting R2 upload...");
       const fileKey = await uploadToR2(buffer, uniqueFilename, file.type);
-      console.log("R2 upload completed, key:", fileKey);
+      console.log("R2 upload completed --> Key:", fileKey);
 
       // Store in database with key instead of URL
       const expiresAt = new Date();

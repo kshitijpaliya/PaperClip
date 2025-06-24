@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     "collaboration",
     "pastebin",
     "text editor",
+    "dontpad",
   ],
   authors: [{ name: "PaperClip" }],
   openGraph: {
@@ -39,6 +40,9 @@ export const metadata: Metadata = {
     title: "PaperClip - Simple Notes & File Sharing",
     description:
       "Simple, fast, and collaborative note-taking with file sharing capabilities.",
+  },
+  icons: {
+    icon: "/logoitis.ico",
   },
 };
 

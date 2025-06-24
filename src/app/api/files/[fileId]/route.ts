@@ -5,11 +5,13 @@ import { deleteFromR2, generatePresignedUrl } from "@/lib/r2-client";
 // GET: Download file by ID using presigned URL
 export async function GET(
   request: NextRequest,
-  { params }: { params: { fileId: string } }
+  { params }: { params: Promise<{ fileId: string }> }
 ) {
   try {
+    const { fileId } = await params;
+
     const fileRecord = await prisma.file.findUnique({
-      where: { id: params.fileId },
+      where: { id: fileId },
     });
 
     if (!fileRecord) {
@@ -23,31 +25,37 @@ export async function GET(
 
     // Generate presigned URL (expires in 1 hour)
     const signedUrl = await generatePresignedUrl(fileRecord.filename, 3600);
-    
+
     // Redirect to the presigned URL
     return NextResponse.redirect(signedUrl);
   } catch (error) {
     console.error("Error generating download URL:", error);
-    return NextResponse.json({ error: "Failed to generate download URL" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate download URL" },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE: Delete file by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { fileId: string } }
+  { params }: { params: Promise<{ fileId: string }> }
 ) {
   try {
-    const { fileId } = params;
+    const { fileId } = await params;
 
     if (!fileId) {
-      return NextResponse.json({ error: "File ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File ID is required" },
+        { status: 400 }
+      );
     }
 
     // Find the file record
     const fileRecord = await prisma.file.findUnique({
       where: { id: fileId },
-      include: { note: true }
+      include: { note: true },
     });
 
     if (!fileRecord) {

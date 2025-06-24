@@ -6,16 +6,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-console.log("R2 Environment Variables:");
-console.log("R2_ENDPOINT:", process.env.R2_ENDPOINT);
-console.log("R2_ACCESS_KEY_ID:", process.env.R2_ACCESS_KEY_ID);
-console.log(
-  "R2_SECRET_ACCESS_KEY:",
-  process.env.R2_SECRET_ACCESS_KEY ? "SET" : "NOT SET"
-);
-console.log("R2_BUCKET_NAME:", process.env.R2_BUCKET_NAME);
-console.log("R2_REGION:", process.env.R2_REGION);
-
 const r2Client = new S3Client({
   region: process.env.R2_REGION || "auto",
   endpoint: process.env.R2_ENDPOINT,
@@ -37,7 +27,6 @@ export async function uploadToR2(
   console.log("Key:", key);
   console.log("ContentType:", contentType);
   console.log("Buffer size:", buffer.length);
-  console.log("Bucket:", process.env.R2_BUCKET_NAME);
 
   try {
     const command = new PutObjectCommand({
@@ -47,9 +36,8 @@ export async function uploadToR2(
       ContentType: contentType,
     });
 
-    console.log("Sending command to R2...");
-    const result = await r2Client.send(command);
-    console.log("Upload successful:", result);
+    await r2Client.send(command);
+    console.log("Upload successful!");
 
     // Return the key instead of public URL since bucket is now private
     return key;
@@ -68,8 +56,8 @@ export async function deleteFromR2(key: string): Promise<void> {
       Key: key,
     });
 
-    const result = await r2Client.send(command);
-    console.log("Delete successful:", result);
+    await r2Client.send(command);
+    console.log("Delete successful!");
   } catch (error) {
     console.error("R2 delete failed:", error);
     throw error;

@@ -72,8 +72,8 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
       link.click();
       document.body.removeChild(link);
       toast.success(`Downloaded ${file.originalName}`);
-    } catch (error) {
-      toast.error(`Failed to download ${file.originalName}`);
+    } catch {
+      toast.error(`Failed To Download ${file.originalName}`);
     }
   };
 
@@ -90,14 +90,14 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
       });
 
       if (response.ok) {
-        toast.success(`${fileName} deleted successfully`);
+        toast.success(`${fileName} Deleted Successfully`);
         onFileDeleted?.();
       } else {
         const data = await response.json();
-        toast.error(data.error || "Failed to delete file");
+        toast.error(data.error || "Failed To Delete File");
       }
-    } catch (error) {
-      toast.error(`Failed to delete ${fileName}`);
+    } catch {
+      toast.error(`Failed To Delete ${fileName}`);
     } finally {
       setDeletingFiles((prev) => {
         const newSet = new Set(prev);
@@ -112,7 +112,7 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
   }
 
   return (
-    <Card className="glass-effect border-border/50 card-hover">
+    <Card className="glass-effect border border-blue-950">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center text-foreground">

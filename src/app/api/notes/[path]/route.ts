@@ -1,7 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest, { params }: { params: { path: string } }) {
+// GET: Get note by path
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string }> }
+) {
   try {
     const { path } = await params;
 
@@ -11,18 +15,18 @@ export async function GET(request: NextRequest, { params }: { params: { path: st
 
     const note = await prisma.note.findUnique({
       where: { path },
-      include: { 
+      include: {
         files: {
-          orderBy: { uploadedAt: 'desc' }
-        }
-      }
+          orderBy: { uploadedAt: "desc" },
+        },
+      },
     });
 
     if (!note) {
-      return NextResponse.json({ 
-        content: "", 
+      return NextResponse.json({
+        content: "",
         files: [],
-        path: path
+        path: path,
       });
     }
 
@@ -30,15 +34,22 @@ export async function GET(request: NextRequest, { params }: { params: { path: st
       content: note.content,
       files: note.files,
       path: note.path,
-      updatedAt: note.updatedAt
+      updatedAt: note.updatedAt,
     });
   } catch (error) {
     console.error("Error fetching note:", error);
-    return NextResponse.json({ error: "Failed to fetch note" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch note" },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { path: string } }) {
+// PUT: Update note by path
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string }> }
+) {
   try {
     const { path } = await params;
     const { content } = await request.json();
@@ -48,35 +59,41 @@ export async function PUT(request: NextRequest, { params }: { params: { path: st
     }
 
     if (typeof content !== "string") {
-      return NextResponse.json({ error: "Content must be a string" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Content must be a string" },
+        { status: 400 }
+      );
     }
 
     const note = await prisma.note.upsert({
       where: { path },
-      update: { 
+      update: {
         content,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
-      create: { 
-        path, 
+      create: {
+        path,
         content,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
-      include: { 
+      include: {
         files: {
-          orderBy: { uploadedAt: 'desc' }
-        }
-      }
+          orderBy: { uploadedAt: "desc" },
+        },
+      },
     });
 
     return NextResponse.json({
       content: note.content,
       files: note.files,
       path: note.path,
-      updatedAt: note.updatedAt
+      updatedAt: note.updatedAt,
     });
   } catch (error) {
     console.error("Error updating note:", error);
-    return NextResponse.json({ error: "Failed to update note" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update note" },
+      { status: 500 }
+    );
   }
 }
