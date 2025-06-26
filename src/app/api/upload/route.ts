@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generatePresignedUrl, uploadToR2 } from "@/lib/r2-client";
 import { generateUniqueFilename } from "@/lib/file-utils";
+import { pusher } from "@/lib/pusher";
 
 // Rate limiting store (consider Redis for production)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -169,6 +170,14 @@ export async function POST(req: NextRequest) {
         url: signedUrl, // NEW: direct, time-limited access
         size: file.size,
         type: file.type,
+      });
+    }
+
+    // After successful upload, broadcast to other users
+    if (uploadedFiles.length > 0) {
+      await pusher.trigger(`presence-note-${notePath}`, "file-uploaded", {
+        files: uploadedFiles,
+        timestamp: new Date().toISOString(),
       });
     }
 

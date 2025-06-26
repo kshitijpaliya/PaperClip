@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 // Remove FileUpload import and add UploadThing
 import { R2FileUpload } from "@/components/r2-file-upload";
 import { FileList } from "./file-list";
-import { useNote } from "@/hooks/use-note";
+import { usePusherNote as useNote } from "@/hooks/use-pusher-note";
 import { Loader2, Save, Check, Copy, ArrowLeft, Paperclip } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -41,7 +41,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
             toast.error("Failed To Save Note");
           });
       }
-    }, 3000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [content, note, updateNote]);
@@ -170,7 +170,13 @@ export function NoteEditor({ path }: NoteEditorProps) {
           </Card>
 
           {note?.files && note.files.length > 0 && (
-            <FileList files={note.files} onFileDeleted={refreshNote} />
+            <FileList
+              files={note.files.map((file: any) => ({
+                ...file,
+                createdAt: file.createdAt ?? "",
+              }))}
+              onFileDeleted={refreshNote}
+            />
           )}
 
           {/* Stats Section */}
