@@ -34,12 +34,19 @@ export const metadata: Metadata = {
     description:
       "Simple, fast, and collaborative note-taking with file sharing capabilities.",
     type: "website",
+    images: [
+      {
+        url: "/image.png", // Add your PNG image path here
+        alt: "PaperClip preview",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "PaperClip - Simple Notes & File Sharing",
     description:
       "Simple, fast, and collaborative note-taking with file sharing capabilities.",
+    images: ["/image.png"], // Add your PNG image path here
   },
   icons: {
     icon: "/logoitis.ico",

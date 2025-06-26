@@ -5,46 +5,112 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-// Remove FileUpload import and add UploadThing
 import { R2FileUpload } from "@/components/r2-file-upload";
 import { FileList } from "./file-list";
-import { useNote } from "@/hooks/use-note";
-import { Loader2, Save, Check, Copy, ArrowLeft, Paperclip } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  Check,
+  Copy,
+  ArrowLeft,
+  Paperclip,
+  // Wifi,
+  // WifiOff,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface NoteEditorProps {
-  path: string;
+// Add the Note type definition with proper file structure
+interface FileItem {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
 }
 
-export function NoteEditor({ path }: NoteEditorProps) {
-  const { note, loading, saving, updateNote, refreshNote } = useNote(path);
+interface Note {
+  content: string;
+  path: string;
+  updatedAt: string;
+  files?: FileItem[]; // Changed from File[] to FileItem[]
+}
+
+interface NoteEditorProps {
+  path: string;
+  note: Note | null;
+  loading: boolean;
+  saving: boolean;
+  broadcastUpdate: (content: string) => void;
+  saveToDatabase: (content: string) => Promise<void>;
+  refreshNote: () => Promise<void>; // Add this
+}
+
+export function NoteEditor({
+  path,
+  note,
+  loading,
+  saving,
+  broadcastUpdate,
+  saveToDatabase,
+  refreshNote,
+}: NoteEditorProps) {
   const [content, setContent] = useState("");
+  const [lastBroadcastedContent, setLastBroadcastedContent] = useState("");
+  const [lastSavedContent, setLastSavedContent] = useState("");
+  const [lastBroadcast, setLastBroadcast] = useState<Date | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
 
+  // Initialize content from note
   useEffect(() => {
     if (note) {
-      setContent(note.content);
+      setContent((prev) => {
+        if (prev !== note.content) {
+          setLastSavedContent(note.content);
+          setLastBroadcastedContent(note.content);
+          return note.content;
+        }
+        return prev;
+      });
     }
   }, [note]);
 
+  // Broadcast (300ms delay)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (note && content !== note.content) {
-        updateNote(content)
+      if (content !== lastBroadcastedContent && content.trim() !== "") {
+        broadcastUpdate(content);
+        setLastBroadcast(new Date());
+        setLastBroadcastedContent(content);
+        console.log("Broadcasted to other users");
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [content, lastBroadcastedContent, broadcastUpdate]);
+
+  // Auto-save to DB (3s delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (content !== lastSavedContent && content.trim() !== "") {
+        saveToDatabase(content)
           .then(() => {
             setLastSaved(new Date());
+            setLastSavedContent(content);
+            console.log("✅ Saved to database");
           })
-          .catch(() => {
+          .catch((error) => {
+            console.error("❌ Save failed:", error);
             toast.error("Failed To Save Note");
           });
       }
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [content, note, updateNote]);
+  }, [content, lastSavedContent, saveToDatabase]);
 
   const copyUrl = async () => {
     try {
@@ -54,6 +120,18 @@ export function NoteEditor({ path }: NoteEditorProps) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed To Copy URL");
+    }
+  };
+
+  // Update the file operation handler
+  const handleFileOperation = async () => {
+    console.log("File operation completed, refreshing note...");
+    try {
+      await refreshNote();
+      console.log("Note refreshed successfully");
+    } catch (error) {
+      console.error("Failed to refresh note:", error);
+      toast.error("Failed to refresh file list");
     }
   };
 
@@ -87,7 +165,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
               Back to Home
             </Button>
 
-            <div className="flex items-center gap-3 ">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 onClick={copyUrl}
@@ -105,7 +183,16 @@ export function NoteEditor({ path }: NoteEditorProps) {
 
           <div className="flex items-center gap-4 justify-between">
             <h1 className="text-2xl font-bold text-gradient">/{path}</h1>
-            <div>
+            <div className="flex items-center gap-2">
+              {/* Real-time broadcast status */}
+              {/* {lastBroadcast && (
+                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                  <Wifi className="w-3 h-3 mr-1" />
+                  Synced {lastBroadcast.toLocaleTimeString()}
+                </Badge>
+              )} */}
+
+              {/* Database save status */}
               {saving && (
                 <Badge className="status-saving animate-pulse">
                   <Save className="w-3 h-3 mr-1" />
@@ -136,7 +223,8 @@ export function NoteEditor({ path }: NoteEditorProps) {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Start typing your note... 
-                  ✨ Your changes are automatically saved
+                  ✨ Changes sync in real-time (300ms)
+                  💾 Auto-saved every 3 seconds
                   📎 Use the upload button to attach files  
                   🔗 Share this URL with others to collaborate"
                   className="min-h-[500px] resize-none border-0 bg-transparent p-6 text-base leading-relaxed focus-visible:ring-0 focus-visible:border-0 focus:border-0 focus:outline-none focus:ring-0 focus:outline-none placeholder:text-muted-foreground/70"
@@ -156,23 +244,28 @@ export function NoteEditor({ path }: NoteEditorProps) {
               <div className="flex items-center space-x-2">
                 <Paperclip className="h-4 w-4 text-blue-400" />
                 <CardTitle className="text-lg font-medium text-foreground">
-                  File Attachments -
+                  File Attachments
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <R2FileUpload
                 notePath={path}
-                onUploadComplete={refreshNote}
+                onUploadComplete={handleFileOperation}
                 disabled={saving}
               />
             </CardContent>
           </Card>
 
           {note?.files && note.files.length > 0 && (
-            <FileList files={note.files} onFileDeleted={refreshNote} />
+            <FileList
+              files={note.files.map((file) => ({
+                ...file,
+                createdAt: new Date().toISOString(), // Convert Date to string
+              }))}
+              onFileDeleted={handleFileOperation}
+            />
           )}
-
           {/* Stats Section */}
           <Card className="glass-effect border-border/50">
             <CardContent className="p-4">
@@ -188,10 +281,17 @@ export function NoteEditor({ path }: NoteEditorProps) {
                   </span>
                   <span>{content.split("\n").length} Lines</span>
                 </div>
-                <div>
-                  {lastSaved
-                    ? `Saved: ${lastSaved.toLocaleString()}`
-                    : "Not Saved Yet"}
+                <div className="flex items-center gap-4">
+                  {lastBroadcast && (
+                    <span className="text-blue-500">
+                      Last sync: {lastBroadcast.toLocaleTimeString()}
+                    </span>
+                  )}
+                  {lastSaved ? (
+                    <span>Last saved: {lastSaved.toLocaleTimeString()}</span>
+                  ) : (
+                    <span>Not saved yet</span>
+                  )}
                 </div>
               </div>
             </CardContent>

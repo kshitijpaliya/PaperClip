@@ -48,11 +48,15 @@ export async function GET(
 // PUT: Update note by path
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string }> }
+  { params }: { params: { path: string } }
 ) {
   try {
     const { path } = await params;
     const { content } = await request.json();
+
+    console.log("Incoming PUT request");
+    console.log("Path:", path);
+    console.log("Content:", content);
 
     if (!path || path.trim() === "") {
       return NextResponse.json({ error: "Path is required" }, { status: 400 });

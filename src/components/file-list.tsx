@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 
-interface FileItem {
+interface File {
   id: string;
   filename: string;
   originalName: string;
@@ -26,8 +26,8 @@ interface FileItem {
 }
 
 interface FileListProps {
-  files: FileItem[];
-  onFileDeleted?: () => void;
+  files: File[]; // Change from FileItem[]
+  onFileDeleted: (file: File) => void;
 }
 
 export function FileList({ files, onFileDeleted }: FileListProps) {
@@ -62,7 +62,7 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const downloadFile = async (file: FileItem) => {
+  const downloadFile = async (file: File) => {
     try {
       const link = document.createElement("a");
       link.href = file.url;
