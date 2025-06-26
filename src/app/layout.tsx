@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     "text editor",
     "dontpad",
   ],
-  authors: [{ name: "PaperClip" }],
+  authors: [{ name: "Kshitij Paliya" }],
   openGraph: {
     title: "PaperClip - Simple Notes & File Sharing",
     description:
@@ -40,6 +40,7 @@ export const metadata: Metadata = {
     title: "PaperClip - Simple Notes & File Sharing",
     description:
       "Simple, fast, and collaborative note-taking with file sharing capabilities.",
+    images: "/logofinal.png",
   },
   icons: {
     icon: "/logoitis.ico",

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { deleteFromR2, generatePresignedUrl } from "@/lib/r2-client";
-import { pusher } from "@/lib/pusher"; // Add this import
+import { deleteFromR2, r2Client } from "@/lib/r2-client";
+import { pusher } from "@/lib/pusher";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 
-// GET: Download file by ID using presigned URL
+// GET: Download file by ID by streaming from R2
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
@@ -24,15 +25,37 @@ export async function GET(
       return NextResponse.json({ error: "File has expired" }, { status: 410 });
     }
 
-    // Generate presigned URL (expires in 1 hour)
-    const signedUrl = await generatePresignedUrl(fileRecord.filename, 3600);
+    // Get the file from R2 directly
+    const command = new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: fileRecord.filename,
+    });
 
-    // Redirect to the presigned URL
-    return NextResponse.redirect(signedUrl);
+    const response = await r2Client.send(command);
+
+    if (!response.Body) {
+      return NextResponse.json(
+        { error: "File content not found" },
+        { status: 404 }
+      );
+    }
+
+    // Convert the stream to ArrayBuffer
+    const arrayBuffer = await response.Body.transformToByteArray();
+
+    // Return the file with proper headers
+    return new NextResponse(arrayBuffer, {
+      headers: {
+        "Content-Type": fileRecord.mimeType || "application/octet-stream",
+        "Content-Disposition": `attachment; filename="${fileRecord.originalName}"`,
+        "Content-Length": arrayBuffer.length.toString(),
+        "Cache-Control": "private, no-cache",
+      },
+    });
   } catch (error) {
-    console.error("Error generating download URL:", error);
+    console.error("Error downloading file:", error);
     return NextResponse.json(
-      { error: "Failed to generate download URL" },
+      { error: "Failed to download file" },
       { status: 500 }
     );
   }
@@ -46,53 +69,28 @@ export async function DELETE(
   try {
     const { fileId } = await params;
 
-    if (!fileId) {
-      return NextResponse.json(
-        { error: "File ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Find the file record
     const fileRecord = await prisma.file.findUnique({
       where: { id: fileId },
-      include: { note: true },
     });
 
     if (!fileRecord) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    // Delete from R2 first
-    try {
-      await deleteFromR2(fileRecord.filename);
-    } catch (r2Error) {
-      console.warn("Failed to delete from R2:", r2Error);
-      // Continue with database deletion even if R2 deletion fails
-    }
+    // Delete from R2
+    await deleteFromR2(fileRecord.filename);
 
     // Delete from database
     await prisma.file.delete({
       where: { id: fileId },
     });
 
-    // Add Pusher broadcast after successful deletion
-    if (fileRecord.note) {
-      await pusher.trigger(
-        `presence-note-${fileRecord.note.path}`,
-        "file-deleted",
-        {
-          fileId: fileId,
-          fileName: fileRecord.originalName,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "File deleted successfully",
+    // Trigger real-time update
+    await pusher.trigger(`note-${fileRecord.noteId}`, "file-deleted", {
+      fileId: fileId,
     });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting file:", error);
     return NextResponse.json(
