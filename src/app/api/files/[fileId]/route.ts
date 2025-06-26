@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { deleteFromR2, generatePresignedUrl } from "@/lib/r2-client";
+import { pusher } from "@/lib/pusher"; // Add this import
 
 // GET: Download file by ID using presigned URL
 export async function GET(
@@ -74,6 +75,19 @@ export async function DELETE(
     await prisma.file.delete({
       where: { id: fileId },
     });
+
+    // Add Pusher broadcast after successful deletion
+    if (fileRecord.note) {
+      await pusher.trigger(
+        `presence-note-${fileRecord.note.path}`,
+        "file-deleted",
+        {
+          fileId: fileId,
+          fileName: fileRecord.originalName,
+          timestamp: new Date().toISOString(),
+        }
+      );
+    }
 
     return NextResponse.json({
       success: true,

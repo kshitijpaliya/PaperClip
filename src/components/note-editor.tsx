@@ -171,7 +171,7 @@ export function NoteEditor({ path }: NoteEditorProps) {
 
           {note?.files && note.files.length > 0 && (
             <FileList
-              files={note.files.map((file: any) => ({
+              files={note.files.map((file) => ({
                 ...file,
                 createdAt: file.createdAt ?? "",
               }))}

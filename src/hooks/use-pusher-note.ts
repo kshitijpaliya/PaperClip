@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import Pusher from "pusher-js";
+import Pusher, { PresenceChannel } from "pusher-js";
 import { toast } from "sonner";
 
+// Add these type definitions at the top
+interface PusherMember {
+  id: string;
+  info?: unknown;
+}
+
+interface PusherMembers {
+  count: number;
+  members: Record<string, PusherMember>;
+}
+
 interface FileItem {
+  createdAt: string;
   id: string;
   filename: string;
   originalName: string;
@@ -38,7 +50,7 @@ export function usePusherNote(path: string) {
   const [onlineUsers, setOnlineUsers] = useState<number>(0);
 
   const pusherRef = useRef<Pusher | null>(null);
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<PresenceChannel | null>(null);
   const lastUpdateRef = useRef<string>("");
   const userIdRef = useRef<string>("");
 
@@ -96,7 +108,9 @@ export function usePusherNote(path: string) {
 
     // Subscribe to note channel
     const channelName = `presence-note-${path}`;
-    channelRef.current = pusherRef.current.subscribe(channelName);
+    channelRef.current = pusherRef.current.subscribe(
+      channelName
+    ) as PresenceChannel;
 
     // Connection events
     pusherRef.current.connection.bind("connected", () => {
@@ -110,17 +124,20 @@ export function usePusherNote(path: string) {
     });
 
     // Presence channel events
-    channelRef.current.bind("pusher:subscription_succeeded", (members: any) => {
-      setOnlineUsers(members.count);
-      console.log(`${members.count} Users Online`);
-    });
+    channelRef.current.bind(
+      "pusher:subscription_succeeded",
+      (members: PusherMembers) => {
+        setOnlineUsers(members.count);
+        console.log(`${members.count} Users Online`);
+      }
+    );
 
-    channelRef.current.bind("pusher:member_added", (member: any) => {
+    channelRef.current.bind("pusher:member_added", (member: PusherMember) => {
       setOnlineUsers((prev) => prev + 1);
       console.log("User Joined:", member.id);
     });
 
-    channelRef.current.bind("pusher:member_removed", (member: any) => {
+    channelRef.current.bind("pusher:member_removed", (member: PusherMember) => {
       setOnlineUsers((prev) => Math.max(0, prev - 1));
       console.log("User left:", member.id);
     });
