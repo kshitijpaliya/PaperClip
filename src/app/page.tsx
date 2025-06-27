@@ -23,23 +23,76 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { TurnstileCaptcha } from "@/components/turnstile-captcha";
+import { toast } from "sonner";
 
 export default function Home() {
   const [path, setPath] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (path.trim()) {
-      router.push(`/note/${path.trim()}`);
+    if (!path.trim()) return;
+
+    // Show CAPTCHA first
+    if (!captchaToken) {
+      setShowCaptcha(true);
+      return;
+    }
+
+    // Verify CAPTCHA and proceed
+    await verifyAndProceed(path.trim(), captchaToken);
+  };
+
+  const handleRandomNote = async () => {
+    // Show CAPTCHA first
+    if (!captchaToken) {
+      setShowCaptcha(true);
+      return;
+    }
+
+    const randomPath = Math.random().toString(36).substring(2, 8);
+    await verifyAndProceed(randomPath, captchaToken);
+  };
+
+  const verifyAndProceed = async (notePath: string, token: string) => {
+    setIsVerifying(true);
+    try {
+      const response = await fetch("/api/verify-captcha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, action: "access_note" }),
+      });
+
+      if (response.ok) {
+        router.push(`/note/${notePath}`);
+      } else {
+        toast.error("CAPTCHA verification failed. Please try again.");
+        setCaptchaToken("");
+        setShowCaptcha(false);
+      }
+    } catch (error) {
+      toast.error("Verification failed. Please try again.");
+      setCaptchaToken("");
+      setShowCaptcha(false);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  const handleRandomNote = () => {
-    const randomPath = Math.random().toString(36).substring(2, 8);
-    router.push(`/note/${randomPath}`);
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    toast.success("CAPTCHA verified successfully!");
   };
 
+  const handleCaptchaError = () => {
+    toast.error("CAPTCHA verification failed. Please try again.");
+    setCaptchaToken("");
+  };
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -92,6 +145,20 @@ export default function Home() {
                       className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground/70"
                     />
                   </div>
+
+                  {showCaptcha && !captchaToken && (
+                    <div className="border border-border/50 rounded-lg p-4 bg-muted/10">
+                      <p className="text-sm text-muted-foreground mb-3 text-center">
+                        Please complete the security verification
+                      </p>
+                      <TurnstileCaptcha
+                        onVerify={handleCaptchaVerify}
+                        onError={handleCaptchaError}
+                        onExpire={() => setCaptchaToken("")}
+                      />
+                    </div>
+                  )}
+
                   <div className="flex gap-4">
                     <Button
                       type="submit"
