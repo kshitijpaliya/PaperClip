@@ -30,7 +30,7 @@ export default function Home() {
   const [path, setPath] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [, setIsVerifying] = useState(false);
 
   const router = useRouter();
 
@@ -75,7 +75,7 @@ export default function Home() {
         setCaptchaToken("");
         setShowCaptcha(false);
       }
-    } catch (error) {
+    } catch {
       toast.error("Verification failed. Please try again.");
       setCaptchaToken("");
       setShowCaptcha(false);

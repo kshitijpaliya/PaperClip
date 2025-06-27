@@ -11,7 +11,7 @@ interface TurnstileResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, action } = await request.json();
+    const { token } = await request.json();
 
     if (!token) {
       return NextResponse.json(

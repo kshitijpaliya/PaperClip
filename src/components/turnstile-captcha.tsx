@@ -14,7 +14,7 @@ export function TurnstileCaptcha({
   onError,
   onExpire,
 }: TurnstileCaptchaProps) {
-  const [isVerified, setIsVerified] = useState(false);
+  const [, setIsVerified] = useState(false);
 
   return (
     <div className="flex justify-center my-4">
