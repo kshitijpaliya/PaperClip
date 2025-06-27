@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { encryptText, decryptText } from "@/lib/encryption";
+import { decryptText } from "@/lib/encryption";
 
 // GET: Get note by path
 export async function GET(
