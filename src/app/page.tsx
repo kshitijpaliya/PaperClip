@@ -22,6 +22,7 @@ import {
   Globe,
   ArrowRight,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { TurnstileCaptcha } from "@/components/turnstile-captcha";
 import { toast } from "sonner";
@@ -30,7 +31,11 @@ export default function Home() {
   const [path, setPath] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [, setIsVerifying] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "submit" | "random";
+    path?: string;
+  } | null>(null);
 
   const router = useRouter();
 
@@ -41,6 +46,7 @@ export default function Home() {
     // Show CAPTCHA first
     if (!captchaToken) {
       setShowCaptcha(true);
+      setPendingAction({ type: "submit", path: path.trim() });
       return;
     }
 
@@ -49,13 +55,15 @@ export default function Home() {
   };
 
   const handleRandomNote = async () => {
+    const randomPath = Math.random().toString(36).substring(2, 8);
+
     // Show CAPTCHA first
     if (!captchaToken) {
       setShowCaptcha(true);
+      setPendingAction({ type: "random", path: randomPath });
       return;
     }
 
-    const randomPath = Math.random().toString(36).substring(2, 8);
     await verifyAndProceed(randomPath, captchaToken);
   };
 
@@ -74,25 +82,39 @@ export default function Home() {
         toast.error("CAPTCHA verification failed. Please try again.");
         setCaptchaToken("");
         setShowCaptcha(false);
+        setPendingAction(null);
       }
     } catch {
       toast.error("Verification failed. Please try again.");
       setCaptchaToken("");
       setShowCaptcha(false);
+      setPendingAction(null);
     } finally {
       setIsVerifying(false);
     }
   };
 
-  const handleCaptchaVerify = (token: string) => {
+  const handleCaptchaVerify = async (token: string) => {
     setCaptchaToken(token);
     toast.success("CAPTCHA verified successfully!");
+
+    // Automatically proceed with the pending action
+    if (pendingAction) {
+      await verifyAndProceed(pendingAction.path!, token);
+    }
   };
 
   const handleCaptchaError = () => {
     toast.error("CAPTCHA verification failed. Please try again.");
     setCaptchaToken("");
+    setPendingAction(null);
   };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken("");
+    setPendingAction(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -128,8 +150,8 @@ export default function Home() {
                   Create or Access a Note
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Enter a unique name for your note. Anyone with the link can
-                  access it.
+                  Enter a unique name for your note. Complete the security check
+                  to proceed.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -143,6 +165,7 @@ export default function Home() {
                       onChange={(e) => setPath(e.target.value)}
                       placeholder="my-awesome-note"
                       className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground/70"
+                      disabled={isVerifying}
                     />
                   </div>
 
@@ -154,8 +177,15 @@ export default function Home() {
                       <TurnstileCaptcha
                         onVerify={handleCaptchaVerify}
                         onError={handleCaptchaError}
-                        onExpire={() => setCaptchaToken("")}
+                        onExpire={handleCaptchaExpire}
                       />
+                    </div>
+                  )}
+
+                  {isVerifying && (
+                    <div className="flex items-center justify-center py-4 text-muted-foreground">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying and opening note...
                     </div>
                   )}
 
@@ -163,18 +193,35 @@ export default function Home() {
                     <Button
                       type="submit"
                       className="flex-1 h-12 btn-primary"
-                      disabled={!path.trim()}
+                      disabled={!path.trim() || isVerifying}
                     >
-                      Open Note
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      {isVerifying ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Opening...
+                        </>
+                      ) : (
+                        <>
+                          Open Note
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handleRandomNote}
                       className="h-12 border-border/50 hover:border-blue-500/50 hover:bg-blue-500/10"
+                      disabled={isVerifying}
                     >
-                      Random
+                      {isVerifying && pendingAction?.type === "random" ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Opening...
+                        </>
+                      ) : (
+                        "Random"
+                      )}
                     </Button>
                   </div>
                 </form>
@@ -331,9 +378,19 @@ export default function Home() {
             size="lg"
             onClick={handleRandomNote}
             className="h-14 px-8 text-base btn-primary"
+            disabled={isVerifying}
           >
-            Create Random Note
-            <ArrowRight className="ml-2 h-5 w-5" />
+            {isVerifying && pendingAction?.type === "random" ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                Create Random Note
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
           </Button>
         </div>
       </section>
