@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { encryptText, decryptText } from "@/lib/encryption";
 
 // GET: Get note by path
 export async function GET(
@@ -31,7 +32,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      content: note.content,
+      content: decryptText(note.content),
       files: note.files,
       path: note.path,
       updatedAt: note.updatedAt,
@@ -84,7 +85,7 @@ export async function PUT(
     });
 
     return NextResponse.json({
-      content: note.content,
+      content: decryptText(note.content),
       files: note.files,
       path: note.path,
       updatedAt: note.updatedAt,

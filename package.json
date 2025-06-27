@@ -47,6 +47,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "crypto": "^1.0.1",
+    "crypto-js": "^4.2.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.5.1",
     "fs": "^0.0.1-security",
@@ -75,6 +76,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/crypto-js": "^4.2.2",
     "@types/multer": "^1.4.13",
     "@types/node": "^20",
     "@types/react": "^19",

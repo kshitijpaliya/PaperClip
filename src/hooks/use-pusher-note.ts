@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Pusher, { PresenceChannel } from "pusher-js";
 import { toast } from "sonner";
+import { encryptText, decryptText } from "@/lib/encryption";
 
 // Add these type definitions at the top
 interface PusherMember {
@@ -68,8 +69,12 @@ export function usePusherNote(path: string) {
       const response = await fetch(`/api/notes/${path}`);
       if (response.ok) {
         const noteData = await response.json();
-        setNote(noteData);
-        lastUpdateRef.current = noteData.content;
+        const decryptedContent = decryptText(noteData.content);
+        setNote({
+          ...noteData,
+          content: decryptedContent,
+        });
+        lastUpdateRef.current = decryptedContent;
       } else if (response.status === 404) {
         // Create new note if it doesn't exist
         const newNote: Note = {
@@ -226,12 +231,13 @@ export function usePusherNote(path: string) {
 
       setSaving(true);
       try {
+        const encryptedContent = encryptText(content);
         const response = await fetch(`/api/notes/${path}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ content: encryptedContent }),
         });
 
         if (!response.ok) {
@@ -239,18 +245,19 @@ export function usePusherNote(path: string) {
         }
 
         const savedNote = await response.json();
+        const decryptedContent = decryptText(savedNote.content);
         setNote((prev) =>
           prev
             ? {
                 ...prev,
-                content: savedNote.content,
+                content: decryptedContent,
                 updatedAt: savedNote.updatedAt,
                 files: savedNote.files || prev.files || [],
               }
             : savedNote
         );
 
-        lastUpdateRef.current = savedNote.content;
+        lastUpdateRef.current = decryptedContent;
       } catch (error) {
         console.error("Failed to save note:", error);
         throw error;
