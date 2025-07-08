@@ -79,7 +79,7 @@ export default function Home() {
       if (response.ok) {
         router.push(`/note/${notePath}`);
       } else {
-        toast.error("CAPTCHA verification failed. Please try again.");
+        toast.error("CAPTCHA Verification Failed. Please Try Again.");
         setCaptchaToken("");
         setShowCaptcha(false);
         setPendingAction(null);
@@ -96,7 +96,7 @@ export default function Home() {
 
   const handleCaptchaVerify = async (token: string) => {
     setCaptchaToken(token);
-    toast.success("CAPTCHA verified successfully!");
+    toast.success("CAPTCHA Verified Successfully!");
 
     // Automatically proceed with the pending action
     if (pendingAction) {
@@ -105,7 +105,7 @@ export default function Home() {
   };
 
   const handleCaptchaError = () => {
-    toast.error("CAPTCHA verification failed. Please try again.");
+    toast.error("CAPTCHA Verification Failed. Please Try Again.");
     setCaptchaToken("");
     setPendingAction(null);
   };
@@ -135,7 +135,7 @@ export default function Home() {
               <span className="text-gradient bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 bg-clip-text text-transparent">
                 PaperClip:
               </span>
-              <span className="text-foreground"> Notes & Files</span>
+              <span className="text-foreground"> Text & Files</span>
             </h1>
 
             <p className="text-xl text-muted-foreground mb-16 max-w-2xl mx-auto leading-relaxed">
@@ -172,7 +172,7 @@ export default function Home() {
                   {showCaptcha && !captchaToken && (
                     <div className="border border-border/50 rounded-lg p-4 bg-muted/10">
                       <p className="text-sm text-muted-foreground mb-3 text-center">
-                        Please complete the security verification
+                        Please Complete The Security Verification
                       </p>
                       <TurnstileCaptcha
                         onVerify={handleCaptchaVerify}
