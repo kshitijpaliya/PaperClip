@@ -62,44 +62,25 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // const downloadFile = async (file: FileItem) => {
-  //   try {
-  //     const link = document.createElement("a");
-  //     link.href = file.url;
-  //     link.download = file.originalName;
-  //     link.target = "_blank";
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //     toast.success(`Downloaded ${file.originalName}`);
-  //   } catch {
-  //     toast.error(`Failed To Download ${file.originalName}`);
-  //   }
-  // };
-
   const downloadFile = async (file: FileItem) => {
     try {
-      // Instead of direct link creation, fetch the file properly
-      const response = await fetch(`/api/files/${file.id}`);
+      // Get fresh signed URL
+      const response = await fetch(`/api/files/${file.id}/signed-url`);
 
       if (!response.ok) {
-        throw new Error("Download failed");
+        throw new Error("Failed to get download URL");
       }
 
-      // Get the blob from the response
-      const blob = await response.blob();
+      const { signedUrl } = await response.json();
 
-      // Create object URL and download
-      const url = window.URL.createObjectURL(blob);
+      // Direct download from R2 using signed URL
       const link = document.createElement("a");
-      link.href = url;
+      link.href = signedUrl;
       link.download = file.originalName;
+      link.target = "_blank"; // Opens in new tab for security
       document.body.appendChild(link);
       link.click();
-
-      // Cleanup
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
 
       toast.success(`Downloaded ${file.originalName}`);
     } catch {
