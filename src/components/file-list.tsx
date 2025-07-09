@@ -172,7 +172,7 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
                     variant="ghost"
                     onClick={() => downloadFile(file)}
                     disabled={isDeleting}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-500/10 hover:text-blue-400"
+                    className="group-hover:opacity-100 transition-opacity hover:bg-blue-500/10 hover:text-blue-400"
                   >
                     <Download className="w-4 h-4" />
                     <span className="sr-only">
@@ -184,7 +184,7 @@ export function FileList({ files, onFileDeleted }: FileListProps) {
                     variant="ghost"
                     onClick={() => deleteFile(file.id, file.originalName)}
                     disabled={isDeleting}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/10 hover:text-red-400"
+                    className="group-hover:opacity-100 transition-opacity hover:bg-red-500/10 text-red-400"
                   >
                     {isDeleting ? (
                       <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
